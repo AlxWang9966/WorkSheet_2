@@ -136,7 +136,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String result = String.valueOf(temp);
             if (result.endsWith(".0")) result = result.replace(".0", "");
             input.setText(result);
-            log.clear();
             log.add(result);
             return;
         }
@@ -148,7 +147,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String result = String.valueOf(temp);
             if (result.endsWith(".0")) result = result.replace(".0", "");
             input.setText(result);
-            log.clear();
             log.add(result);
             return;
         }
