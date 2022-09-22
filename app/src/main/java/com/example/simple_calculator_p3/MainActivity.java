@@ -15,6 +15,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     MaterialButton num_4, num_5, num_6, b_minus, b_div;
     MaterialButton num_7, num_8, num_9, b_sqrt;
     MaterialButton num_0, b_decimal, b_clear, b_eq;
+    String formulaString = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +40,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         assignID(b_div, R.id.b_div);
         assignID(b_sqrt, R.id.b_sqrt);
         assignID(b_decimal, R.id.b_decimal);
+        assignID(b_eq, R.id.b_eq);
+        assignID(b_clear, R.id.b_clear);
 
     }
 
@@ -47,10 +50,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btn.setOnClickListener(this);
     }
 
-    @Override
-    public void onClick(View view){
-        MaterialButton button = (MaterialButton) view;
-        String buttontext = button.getText().toString();
-        formula.setText(buttontext);
+    //UNFINISHED!!!
+    //method to calculate the formula - parsing through the string
+    public float calc( String formString) {
+        float answer = 0;
+        int i = 0;
+
+        while (formString.length() > 0) {
+            if (formString.indexOf('+') > -1) {
+                float input = Float.parseFloat(formString.substring(i, formString.indexOf('+')));
+                answer = answer + input;
+                formString = formString.substring((formString.indexOf('+')) + 1);
+                i += formString.indexOf('+');
+            }
+            System.out.println(formulaString);
+            float input = Float.parseFloat(formulaString.substring(i));
+        }
+
+        return answer;
     }
+
+    @Override
+    public void onClick(View view) {
+        MaterialButton button = (MaterialButton) view;
+        String buttonText = button.getText().toString();
+        float finalAnswer = 0;
+        formulaString = formulaString + buttonText;
+
+        if (buttonText.equals("=")) {
+            finalAnswer = calc(formulaString);
+            result.setText(String.valueOf(finalAnswer));
+        }
+        if (buttonText.equals("C")) {
+            formulaString = "";
+            formula.setText("");
+        } else {
+            formula.setText(formulaString);
+        }
+    }
+
 }
