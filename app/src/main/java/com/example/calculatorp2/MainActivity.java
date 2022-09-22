@@ -3,6 +3,8 @@ package com.example.calculatorp2;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -76,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (isNum(buttonText)) {
             isChanged = true;
+            resetColor();
             if (afterEqual)
                 changeAfterEqual = true;
         }
@@ -102,6 +105,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //AC clears all input
         if (buttonText.equals("AC")) {
             input.setText("0");
+            resetColor();
             log.clear();
             isChanged = true;
             waiting = false;
@@ -113,24 +117,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //For plus
         if (buttonText.equals("+")) {
             buttonAction(buttonText);
+            button.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
             return;
         }
 
         //For minus
         if (buttonText.equals("\u2212")) {
             buttonAction(buttonText);
+            button.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
             return;
         }
 
         //For mul
         if (buttonText.equals("\u00d7")) {
             buttonAction(buttonText);
+            button.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
             return;
         }
 
         //For div
         if (buttonText.equals("\u00f7")) {
             buttonAction(buttonText);
+            button.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
             return;
         }
 
@@ -174,6 +182,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (buttonText.equals("=")) {
             if (log.size() >= 2) {
                 evaluate();
+                resetColor();
                 afterEqual = true;
                 changeAfterEqual = false;
             }
@@ -189,6 +198,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         inputAll.append(preserve);
         inputAll.append(buttonText);
         input.setText(inputAll.toString());
+    }
+
+    private void resetColor() {
+        plus.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF9800")));
+        min.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF9800")));
+        mul.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF9800")));
+        div.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF9800")));
     }
 
     private void evaluate() {
@@ -237,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     result = num1.multiply(num2);
                     break;
                 case "\u00f7":
-                    result = num1.divide(num2, 6 , RoundingMode.CEILING);
+                    result = num1.divide(num2, 6 , RoundingMode.HALF_UP);
                     break;
             }
             return result.toString();
