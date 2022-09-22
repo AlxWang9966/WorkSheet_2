@@ -10,6 +10,7 @@ import android.widget.EditText;
 import com.google.android.material.button.MaterialButton;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.LinkedList;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -23,7 +24,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     StringBuilder inputAll;
     String preserve, buttonText;
     LinkedList<String> log;
-    Boolean waiting, afterEqual, isChanged;
+    Boolean waiting, afterEqual, isChanged, changeAfterEqual;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         waiting = false;
         afterEqual = false;
         isChanged = false;
+        changeAfterEqual = false;
 
         input = findViewById(R.id.input);
         zero = setButtons(R.id.zero);
@@ -65,13 +67,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return button;
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onClick(View view) {
         MaterialButton button = (MaterialButton) view;
         buttonText = button.getText().toString();
         preserve = input.getText().toString();
 
-        if (isNum(buttonText)) isChanged = true;
+        if (isNum(buttonText)) {
+            isChanged = true;
+            if (afterEqual)
+                changeAfterEqual = true;
+        }
 
         //For plus_minus
         if (buttonText.equals("\u00B1")) {
@@ -80,17 +87,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (temp.equals("\u2212") || temp.equals("-")) {
                     String out = preserve.substring(1);
                     input.setText(out);
-                    log.clear();
-                    log.add(out);
                 } else {
                     inputAll.setLength(0);
                     inputAll.append("\u2212");
                     inputAll.append(preserve);
                     String out = inputAll.toString();
                     input.setText(out);
-                    log.clear();
-                    log.add(out);
                 }
+                changeAfterEqual = true;
             }
             return;
         }
@@ -102,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             isChanged = true;
             waiting = false;
             afterEqual = false;
+            changeAfterEqual = false;
             return;
         }
 
@@ -131,23 +136,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //For sqrt
         if (buttonText.equals("\u221a")) {
-            double temp = Double.parseDouble(preserve);
-            temp = Math.sqrt(temp);
-            String result = String.valueOf(temp);
-            if (result.endsWith(".0")) result = result.replace(".0", "");
-            input.setText(result);
-            log.add(result);
+            try {
+                if (preserve.contains("\u2212")) {
+                    preserve = preserve.replace((char) 8722, '-');
+                }
+                double temp = Double.parseDouble(preserve);
+                temp = Math.sqrt(temp);
+                String result = String.valueOf(temp);
+                if (result.endsWith(".0")) result = result.replace(".0", "");
+                input.setText(result);
+                changeAfterEqual = true;
+            } catch (Exception e) {
+                input.setText("NaN");
+            }
             return;
         }
 
         //For percentage
         if (buttonText.equals("%")) {
-            double temp = Double.parseDouble(preserve);
-            temp = temp / 100;
-            String result = String.valueOf(temp);
-            if (result.endsWith(".0")) result = result.replace(".0", "");
-            input.setText(result);
-            log.add(result);
+            try {
+                if (preserve.contains("\u2212")) {
+                    preserve = preserve.replace((char) 8722, '-');
+                }
+                double temp = Double.parseDouble(preserve);
+                temp = temp / 100;
+                String result = String.valueOf(temp);
+                if (result.endsWith(".0")) result = result.replace(".0", "");
+                input.setText(result);
+                changeAfterEqual = true;
+            } catch (Exception e) {
+                input.setText("NaN");
+            }
             return;
         }
 
@@ -156,13 +175,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (log.size() >= 2) {
                 evaluate();
                 afterEqual = true;
+                changeAfterEqual = false;
             }
             return;
         }
 
-        if ((preserve.equals("0") && !buttonText.equals(".")) || waiting) {
+        if ((preserve.equals("0") && !buttonText.equals(".")) || waiting || afterEqual) {
             preserve = "";
             waiting = false;
+            afterEqual = false;
         }
         inputAll.setLength(0);
         inputAll.append(preserve);
@@ -175,8 +196,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         inputAll.append(log.remove());
         inputAll.append(log.remove());
         inputAll.append(preserve);
-        String output = simpleCalculate(inputAll.toString());
-        if (output.endsWith(".0")) output = output.replace(".0", "");
+        String output = checkZeros(simpleCalculate(inputAll.toString()));
         input.setText(output);
         log.clear();
         log.add(output);
@@ -205,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             BigDecimal num1 = new BigDecimal(expression.substring(0, index));
             String op = expression.substring(index, index + 1);
             BigDecimal num2 = new BigDecimal(expression.substring(index + 1));
-            BigDecimal result = null;
+            BigDecimal result = new BigDecimal("0");
             switch (op) {
                 case "+":
                     result = num1.add(num2);
@@ -217,13 +237,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     result = num1.multiply(num2);
                     break;
                 case "\u00f7":
-                    result = num1.divide(num2);
+                    result = num1.divide(num2, 6 , RoundingMode.CEILING);
                     break;
             }
             return result.toString();
-        } catch (Exception e) {
-            input.setText("Invalid input");
-        }
+        } catch (Exception ignored) {}
         return "0";
     }
 
@@ -244,6 +262,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (isNum(log.peek()))
                     evaluate();
             }
+            if (changeAfterEqual) {
+                log.clear();
+                log.add(preserve);
+            }
             log.add(symbol);
             waiting = true;
             afterEqual = false;
@@ -252,5 +274,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             log.removeLast();
             log.add(symbol);
         }
+        System.out.println("log: " + log);
+    }
+
+    private String checkZeros (String input) {
+        int index = input.indexOf(".");
+        String temp = input.substring(index + 1);
+        char c;
+        boolean allZero = true;
+        for (int i = 0; i < temp.length(); i++) {
+            c = temp.charAt(i);
+            if (c != '0') {
+                allZero = false;
+                break;
+            }
+        }
+        if (allZero) {
+            return input.substring(0, index);
+        }
+        return input;
     }
 }
