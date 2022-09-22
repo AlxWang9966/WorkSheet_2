@@ -1,4 +1,4 @@
-package com.example.simple_calculator_p3;
+package com.example.calculatorp2;
 
 import org.junit.Test;
 
