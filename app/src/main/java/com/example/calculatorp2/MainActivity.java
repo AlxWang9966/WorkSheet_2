@@ -3,13 +3,13 @@ package com.example.calculatorp2;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
 import com.google.android.material.button.MaterialButton;
 
+import java.math.BigDecimal;
 import java.util.LinkedList;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -78,12 +78,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String temp = preserve.substring(0, 1);
             if (!temp.equals("0") || preserve.length() > 1) {
                 if (temp.equals("\u2212") || temp.equals("-")) {
-                    input.setText(preserve.substring(1));
+                    String out = preserve.substring(1);
+                    input.setText(out);
+                    log.clear();
+                    log.add(out);
                 } else {
                     inputAll.setLength(0);
                     inputAll.append("\u2212");
                     inputAll.append(preserve);
-                    input.setText(inputAll.toString());
+                    String out = inputAll.toString();
+                    input.setText(out);
+                    log.clear();
+                    log.add(out);
                 }
             }
             return;
@@ -130,6 +136,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String result = String.valueOf(temp);
             if (result.endsWith(".0")) result = result.replace(".0", "");
             input.setText(result);
+            log.clear();
+            log.add(result);
             return;
         }
 
@@ -140,6 +148,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String result = String.valueOf(temp);
             if (result.endsWith(".0")) result = result.replace(".0", "");
             input.setText(result);
+            log.clear();
+            log.add(result);
             return;
         }
 
@@ -167,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         inputAll.append(log.remove());
         inputAll.append(log.remove());
         inputAll.append(preserve);
-        String output = String.valueOf(simpleCalculate(inputAll.toString()));
+        String output = simpleCalculate(inputAll.toString());
         if (output.endsWith(".0")) output = output.replace(".0", "");
         input.setText(output);
         log.clear();
@@ -177,7 +187,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @SuppressLint("SetTextI18n")
-    private double simpleCalculate(String expression) {
+    private String simpleCalculate(String expression) {
         int index = 0;
         int temp;
         System.out.println("Expression: " + expression);
@@ -194,29 +204,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         try {
-            double num1 = Double.parseDouble(expression.substring(0, index));
+            BigDecimal num1 = new BigDecimal(expression.substring(0, index));
             String op = expression.substring(index, index + 1);
-            double num2 = Double.parseDouble(expression.substring(index + 1));
-            double result = 0;
+            BigDecimal num2 = new BigDecimal(expression.substring(index + 1));
+            BigDecimal result = null;
             switch (op) {
                 case "+":
-                    result = num1 + num2;
+                    result = num1.add(num2);
                     break;
                 case "-":
-                    result = num1 - num2;
+                    result = num1.subtract(num2);
                     break;
                 case "\u00d7":
-                    result = num1 * num2;
+                    result = num1.multiply(num2);
                     break;
                 case "\u00f7":
-                    result = num1 / num2;
+                    result = num1.divide(num2);
                     break;
             }
-            return result;
+            return result.toString();
         } catch (Exception e) {
             input.setText("Invalid input");
         }
-        return 0;
+        return "0";
     }
 
     private boolean isNum(String in) {
