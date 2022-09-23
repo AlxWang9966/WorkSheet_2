@@ -38,7 +38,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        android:background="#F1F1F1"
         app:layout_constraintTop_toBottomOf="@id/text_input_all">
 
         <androidx.constraintlayout.widget.ConstraintLayout

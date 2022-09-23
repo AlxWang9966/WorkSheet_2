@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     StringBuilder inputAll;
     String preserve, buttonText;
     LinkedList<String> log;
-    Boolean waiting, afterEqual, isChanged, changeAfterEqual;
+    Boolean waiting, afterEqual, isChanged, changeAfterEqual, dotReady, colorChanged;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +39,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         afterEqual = false;
         isChanged = false;
         changeAfterEqual = false;
+        dotReady = false;
+        colorChanged = false;
 
         input = findViewById(R.id.input);
         zero = setButtons(R.id.zero);
@@ -111,34 +113,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             waiting = false;
             afterEqual = false;
             changeAfterEqual = false;
+            dotReady = false;
             return;
         }
 
         //For plus
         if (buttonText.equals("+")) {
             buttonAction(buttonText);
-            button.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
+            if (colorChanged)
+                resetColor();
+            setColor(button);
             return;
         }
 
         //For minus
         if (buttonText.equals("\u2212")) {
             buttonAction(buttonText);
-            button.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
+            if (colorChanged)
+                resetColor();
+            setColor(button);
             return;
         }
 
         //For mul
         if (buttonText.equals("\u00d7")) {
             buttonAction(buttonText);
-            button.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
+            if (colorChanged)
+                resetColor();
+            setColor(button);
             return;
         }
 
         //For div
         if (buttonText.equals("\u00f7")) {
             buttonAction(buttonText);
-            button.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
+            if (colorChanged)
+                resetColor();
+            setColor(button);
             return;
         }
 
@@ -156,6 +167,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 changeAfterEqual = true;
             } catch (Exception e) {
                 input.setText("NaN");
+            }
+            return;
+        }
+
+        //For dot
+        if (buttonText.equals(".")) {
+            if (preserve.charAt(preserve.length() - 1) != '.' && !dotReady) {
+                inputAll.setLength(0);
+                inputAll.append(preserve);
+                inputAll.append(buttonText);
+                input.setText(inputAll.toString());
+                dotReady =  true;
             }
             return;
         }
@@ -189,7 +212,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        if ((preserve.equals("0") && !buttonText.equals(".")) || waiting || afterEqual) {
+        if (preserve.equals("0") || waiting || afterEqual) {
             preserve = "";
             waiting = false;
             afterEqual = false;
@@ -205,6 +228,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         min.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF9800")));
         mul.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF9800")));
         div.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF9800")));
+        colorChanged = false;
+    }
+
+    private void setColor(MaterialButton button) {
+        button.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
+        colorChanged = true;
     }
 
     private void evaluate() {
@@ -286,6 +315,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             waiting = true;
             afterEqual = false;
             isChanged = false;
+            dotReady = false;
         } else if (!log.isEmpty() && !log.peek().equals(symbol)) {
             log.removeLast();
             log.add(symbol);
@@ -294,6 +324,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private String checkZeros (String input) {
+        System.out.println("input: " + input);
         int index = input.indexOf(".");
         String temp = input.substring(index + 1);
         char c;
@@ -305,7 +336,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             }
         }
-        if (allZero) {
+        if (allZero && index != -1) {
             return input.substring(0, index);
         }
         return input;
